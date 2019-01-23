@@ -1,0 +1,24 @@
+{
+  "name": "SpotifyGeniusBackend",
+  "version": "1.0.0",
+  "description": "OAuth backend for SpotifyGenius",
+  "main": "server.js",
+  "repository": "https://github.com/thv92/SpotifyGeniusBackend",
+  "author": "Thien Vo <vohuythien@utexas.edu>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node ./src/server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "lodash": "^4.17.11",
+    "query-string": "^6.2.0",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "dotenv": "^6.2.0"
+  }
+}
