@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "node ./src/server.js"
+    "start": "nodemon ./src/server.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.3",
@@ -19,6 +19,7 @@
     "request": "^2.88.0"
   },
   "devDependencies": {
-    "dotenv": "^6.2.0"
+    "dotenv": "^6.2.0",
+    "nodemon": "^1.18.9"
   }
 }
