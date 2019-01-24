@@ -32,10 +32,6 @@ module.exports = (app) => {
         const code = req.query.code || null;
         const state = req.query.state || null;
         const storedState = req.cookies ? req.cookies[stateKey] : null;
-        console.log('StoredState: ' + storedState);
-        console.log('Client State: ' + state);
-        console.log('Client ID: ' + client_id);
-        console.log('Client Secret: ' + client_secret);
         if ( state === null || state !== storedState) {
             res.json({
                 error: 'state_mismatch'
@@ -54,9 +50,7 @@ module.exports = (app) => {
                 },
                 json: true
             };
-            console.log('QUERY: ' + req.query);
             request.post(authOptions, (error, response, body) => {
-                console.log(body);
                 if (!error && response.statusCode === 200 ) {
                     //TODO: REDIRECT TO CLIENT
                     res.json({
