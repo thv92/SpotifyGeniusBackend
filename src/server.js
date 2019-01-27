@@ -11,7 +11,6 @@ require('dotenv').config({
 
 const port = process.env.PORT || 9090;
 
-// app.use(express.static(path.resolve(__dirname, '../public')))
 app.use(cors())
    .use(cookieparser());
 
