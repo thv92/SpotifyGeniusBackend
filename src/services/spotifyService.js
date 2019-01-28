@@ -9,7 +9,7 @@ module.exports = {
                         expiresIn: body.expires_in,
                         accessToken: body.access_token,
                         refreshToken: body.refresh_token,
-                        startTime: new Date().now()/1000
+                        startTime: (Date.now() / 1000)
                     });
                 } else {
                     reject({
@@ -24,7 +24,7 @@ module.exports = {
         return new Promise((resolve, reject) => {
             request.post(authOptions, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
-                    resolve(body.refresh_token);
+                    resolve(body.access_token);
                 } else {
                     reject({ error: 'invalid_refresh_request' });
                 }
