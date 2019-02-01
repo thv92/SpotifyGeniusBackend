@@ -8,7 +8,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "nodemon ./src/server.js"
+    "startDev": "nodemon ./src/server.js",
+    "start": "node ./src/server.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
@@ -22,5 +23,8 @@
   "devDependencies": {
     "dotenv": "^6.2.0",
     "nodemon": "^1.18.9"
+  },
+  "engines": {
+    "node": "11.4.0"
   }
 }
