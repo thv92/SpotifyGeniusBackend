@@ -6,7 +6,10 @@ module.exports = {
         return new Promise( (resolve, reject) => {
             request.get(params, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
-                    resolve(cheerio.load(body)('div.lyrics p').text());
+                    const scrapedLyrics = [cheerio.load(body)('div.lyrics p').text()];
+                    console.log('Successfully got lyrics to scrape: ');
+                    console.log(scrapedLyrics);
+                    resolve(scrapedLyrics);
                 } else {
                     reject(new Error('Could not scrape lyrics with cheerio'));
                 }

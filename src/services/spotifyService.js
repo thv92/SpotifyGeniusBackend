@@ -14,7 +14,7 @@ module.exports = {
                 } else {
                     reject({
                         error: body.error,
-                        errorDescription: body.error_description
+                        errorDescription: body.error_description,
                     });
                 }
             });
@@ -24,9 +24,10 @@ module.exports = {
         return new Promise((resolve, reject) => {
             request.post(authOptions, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
+                    console.log('Successfully refreshed token');
                     resolve(body.access_token);
                 } else {
-                    reject({ error: 'invalid_refresh_request' });
+                    reject({ error: body.error, errorDescription: body.error_description });
                 }
             });
         });
@@ -35,9 +36,11 @@ module.exports = {
         return new Promise((resolve, reject) => {
             request.get(queryParams, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
+                    console.log('Successfully retrieved songs from Spotify API');
                     resolve(body.tracks.items);
                 } else {
-                    reject({ error: error ? error : 'invalid_request'});
+                    console.log(error, response, body);
+                    reject({ error: body.error.message, status: body.error.status});
                 }
             });
         });

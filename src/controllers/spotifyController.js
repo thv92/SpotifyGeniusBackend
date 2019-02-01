@@ -10,9 +10,11 @@ const service = require('../services/spotifyService');
 //User is asked to authorize access with predefined scopes
 //User then redirected to 'redirectURI'
 const login = (req, res) => {
+    console.log('GET ' + req.path);
     let state = util.generateRandomString(16);
     let scope = 'user-read-currently-playing';
     res.cookie(stateKey, state);
+    console.log('Asking user for authentication...');
     //request auth from spotify's account service
     res.redirect('https://accounts.spotify.com/authorize?' + 
         querystring.stringify({
@@ -27,11 +29,15 @@ const login = (req, res) => {
 //User redirected after auth request has been accepted/rejected
 //Acquire access/refresh tokens if accepted
 const callback = (req, res, tokens) => {
+    console.log('GET ' + req.path);
     const code = req.query.code || null;
     const state = req.query.state || null;
     const storedState = req.cookies ? req.cookies[stateKey] : null;
+    const error = req.query.error || null
     if (state === null || state !== storedState) {
-        res.status(400).json({error: 'state_mismatch'});
+        res.status(400).json({error: 'state_mismatch', status: 400});
+    } else if (error) {
+        res.status(401).json({error: 'user_denied_permission', status: 401});
     } else {
         res.clearCookie(stateKey);
         let authOptions = {
@@ -51,18 +57,21 @@ const callback = (req, res, tokens) => {
             tokens.refreshToken = result.refreshToken;
             tokens.expiresIn = result.expiresIn;
             tokens.startTime = result.startTime;
-            res.status(200).end();
-        }, (error) =>{
+            console.log('Tokens acquired: ');
+            console.log(tokens);
+            res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
+        }, (error) => {
             console.error('Error has occurred during token request', error);
-            res.status(400).json(error);
+            res.status(401).json(error);
         });
     }
 }
 
 const searchSong = async (req, res, tokens) => {
+    console.log('GET ' + req.path);
     const elapsedTime = (Date.now() / 1000) - tokens.startTime;
     //Ask for new access token if expired
-    if (elapsedTime > tokens.expiresIn) {
+    if (tokens.expiresIn && elapsedTime > tokens.expiresIn) {
         const authOptions = {
             url: 'https://accounts.spotify.com/api/token',
             headers: { 'Authorization': 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64') },
@@ -76,7 +85,7 @@ const searchSong = async (req, res, tokens) => {
             tokens.accessToken = await service.requestRefreshToken(authOptions); 
         } catch (err) {
             console.error('Refresh Token Error', err);
-            res.status(401).json(err);
+            res.status(err.status ? err.status : 401).json(err);
         }
     }
 
@@ -99,18 +108,20 @@ const searchSong = async (req, res, tokens) => {
                 let artists = item.artists.map((artist) => {return artist.name});
                 return {
                     name: item.name,
-                    album_art: item.album.images[1],
+                    album_art: item.album.images[2],
                     artists: artists
                 };
             });
-            res.json(payload);
+            res.json({results: payload});
         }, (err) => {
             console.error('Error searching for song', err);
-            res.status(400).json(err);
+            res.status(err.status).json(err);
         });
     } else {
-        res.status(400).json({
-            error: query ? 'invalid_token' : 'invalid_query'
+        const statusCode = accessToken && refreshToken ? 400 : 401;
+        res.status(statusCode).json({
+            error: query ? 'invalid_token' : 'invalid_query',
+            status: statusCode
         })
     }
 };

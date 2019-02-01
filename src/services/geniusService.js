@@ -8,6 +8,7 @@ module.exports = {
                     if (!body.response || !body.response.hits) {
                         reject(new Error('No response from genius servers for requested lyrics'));
                     } else {
+                        console.log('Successfully got data from Genius API');
                         resolve(body.response.hits);
                     }
                 } else {

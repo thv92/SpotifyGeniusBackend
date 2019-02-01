@@ -1,6 +1,7 @@
 const geniusService = require('../services/geniusService');
 const scrapeService = require('../services/scrapeService');
 const searchLyric = (req, res) => {
+    console.log('GET ' + req.path);
     const name = req.query.name;
     const artist = req.query.artist;
 
