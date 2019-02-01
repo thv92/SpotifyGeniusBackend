@@ -1,7 +1,9 @@
 const path = require('path');
-require('dotenv').config({
-    path: path.resolve(__dirname, '../.env')
-});
+if (process.env.MODE === 'DEVELOPMENT') {
+    require('dotenv').config({
+        path: path.resolve(__dirname, '../.env')
+    });
+}
 const express = require('express');
 const cors = require('cors');
 const cookieparser = require('cookie-parser');
