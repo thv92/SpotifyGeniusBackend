@@ -33,7 +33,7 @@ const searchLyric = (req, res) => {
         })
         .catch((err) => {
             console.error('Error occurred while requesting lyrics', err);
-            res.json({lyrics: []});
+            res.status(err.status).json(err);
         });
     } else {
         res.status(400).json({ error: 'invalid_query' });
