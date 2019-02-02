@@ -15,7 +15,14 @@ module.exports = {
                         resolve(body.response.hits);
                     }
                 } else {
-                    reject(body.meta);
+                    if (body.meta) {
+                        reject(body.meta);
+                    } else {
+                        reject({
+                            "status": 404,
+                            "message": "Not found"
+                        });
+                    }
                 }
             });
         });
