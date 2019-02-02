@@ -11,7 +11,10 @@ module.exports = {
                     console.log(scrapedLyrics);
                     resolve(scrapedLyrics);
                 } else {
-                    reject(new Error('Could not scrape lyrics with cheerio'));
+                    reject({
+                        status: 404,
+                        message: "Could not find data to scrape"
+                    });
                 }
             });
         });

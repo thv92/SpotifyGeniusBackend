@@ -20,9 +20,6 @@ const searchLyric = (req, res) => {
                 return hit.result.title.toUpperCase() === name.toUpperCase()
                     && hit.result.primary_artist.name.toUpperCase().includes(artist.toUpperCase());
             });
-            if (!found) {
-                throw new Error('No hit to scrape for');
-            }
             return found;
         })
         .then((found) => {
@@ -33,7 +30,7 @@ const searchLyric = (req, res) => {
         })
         .catch((err) => {
             console.error('Error occurred while requesting lyrics', err);
-            res.status(err.status).json(err);
+            res.status(err.status ? err.status : 404).json(err);
         });
     } else {
         res.status(400).json({ error: 'invalid_query' });
