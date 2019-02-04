@@ -16,6 +16,14 @@ yarn startDev
 yarn start
 ```
 
+
+### Routes: 
+
+* /login
+* /callback
+* /search/song *(queries: q |song query|)*
+* /search/lyric *(queries: name |song title|, artist |primary artist name|)*
+
 ### Environment Variables that are required:
 * GENIUS_CLIENT_ACCESS_TOKEN *(Can be generated after Genius API account has been created)*
 * SPOTIFY_CLIENT_ID *(One of two required tokens for Spotify API Auth)*
