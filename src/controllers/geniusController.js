@@ -13,10 +13,15 @@ const searchLyric = (req, res) => {
             json: true
         };
         geniusService.requestLyrics(params).then((hits) => {
-            let found = hits.slice(0, 3).find((hit) => {
+            console.log(hits);
+            let found = hits.find((hit) => {
                 const hitTitle = hit.result.title;
-                const longerTitle = hitTitle.length > name ? hitTitle : name;
-                const shorterTitle = hitTitle.length < name ? hitTitle : name;
+                const longerTitle = hitTitle.length > name.length ? hitTitle : name;
+                const shorterTitle = hitTitle.length > name.length ? name : hitTitle;
+                console.log('LONG TITLE: ' + longerTitle);
+                console.log('SHORT TITLE: ' + shorterTitle);
+                console.log('HIT SEARCHING: ');
+                console.log(hit);
                 return longerTitle.toUpperCase().includes(shorterTitle.toUpperCase())
                     && hit.result.primary_artist.name.toUpperCase().includes(artist.toUpperCase());
             });
