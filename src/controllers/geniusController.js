@@ -18,6 +18,7 @@ const searchLyric = (req, res) => {
         };
         geniusService.requestLyrics(params).then((hits) => {
             let found = hits.find((hit) => {
+                console.log('Comparing Against: ');
                 const hitMD = util.getSongTitleMetadata(hit.result.title_with_featured, hit.result.primary_artist.name);
                 return util.compareSongTitleMetadata(queryMD, hitMD) || util.compareSongTitleMetadata(queryMD, hitMD, {isFeatured: true, isVersion: true}) || util.compareSongTitleMetadata(queryMD, hitMD, {isFeatured: true, isVersion: true, ignoreArtist: true});
             });
