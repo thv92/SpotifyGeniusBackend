@@ -7,27 +7,19 @@ const searchLyric = (req, res) => {
     let artist = req.query.artist;
     if (name && artist) {
         name = util.removeMixTerm(name);
-
-
+        const queryMD = util.getSongTitleMetadata(name, artist);
         const params = {
             url: 'https://api.genius.com/search',
             headers: { 'Authorization' : 'Bearer ' + process.env.GENIUS_CLIENT_ACCESS_TOKEN },
             qs: {
-                q: `${artist} ${name}`
+                q: `${artist} ${queryMD.title}`
             },
             json: true
         };
         geniusService.requestLyrics(params).then((hits) => {
             let found = hits.find((hit) => {
-                const hitTitle = hit.result.title;
-                const longerTitle = hitTitle.length > name.length ? hitTitle : name;
-                const shorterTitle = hitTitle.length > name.length ? name : hitTitle;
-                console.log('LONG TITLE: ' + longerTitle);
-                console.log('SHORT TITLE: ' + shorterTitle);
-                console.log('HIT SEARCHING: ');
-                console.log(hit);
-                return longerTitle.toUpperCase().includes(shorterTitle.toUpperCase())
-                    && hit.result.primary_artist.name.toUpperCase().includes(artist.toUpperCase());
+                const hitMD = util.getSongTitleMetadata(hit.result.title_with_featured, hit.result.primary_artist.name);
+                return util.compareSongTitleMetadata(queryMD, hitMD) || util.compareSongTitleMetadata(queryMD, hitMD, {isFeatured: true, isVersion: true}) || util.compareSongTitleMetadata(queryMD, hitMD, {isFeatured: true, isVersion: true, ignoreArtist: true});
             });
 
             if (!found) {
