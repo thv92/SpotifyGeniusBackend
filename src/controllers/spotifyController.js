@@ -1,16 +1,19 @@
 
 const util = require('../util/utils');
+const jwt = require('jsonwebtoken');
 const querystring = require('query-string');
 const redirectURI = process.env.REDIRECT_URI || 'http://localhost:9090/callback';
 const clientID = process.env.SPOTIFY_CLIENT_ID || null;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || null;
 const stateKey = 'spotify_auth_state';
 const service = require('../services/spotifyService');
+const authCookieKey = 'verify_state';
 
 //User is asked to authorize access with predefined scopes
 //User then redirected to 'redirectURI'
 const login = (req, res) => {
     console.log('GET ' + req.path);
+    console.log('clientID: ' + clientID);
     let state = util.generateRandomString(16);
     let scope = 'user-read-currently-playing';
     res.cookie(stateKey, state);
@@ -28,7 +31,8 @@ const login = (req, res) => {
 
 //User redirected after auth request has been accepted/rejected
 //Acquire access/refresh tokens if accepted
-const callback = (req, res, tokens) => {
+//Returns: 0: accessToken | 1: refreshToken | 2: expiresIn | 3: startTime
+const callback = (req, res) => {
     console.log('GET ' + req.path);
     const code = req.query.code || null;
     const state = req.query.state || null;
@@ -53,12 +57,17 @@ const callback = (req, res, tokens) => {
             json: true
         };
         service.requestTokens(authOptions).then((result) => {
-            tokens.accessToken = result.accessToken;
-            tokens.refreshToken = result.refreshToken;
-            tokens.expiresIn = result.expiresIn;
-            tokens.startTime = result.startTime;
             console.log('Tokens acquired: ');
-            console.log(tokens);
+            console.log(result);
+            let payload = {
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+                expiresIn: result.expiresIn,
+                startTime: result.startTime
+            };
+
+            let jwtToken = jwt.sign(payload, process.env.JWT_SECRET);
+            res.cookie(authCookieKey, jwtToken);
             res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
         }, (error) => {
             console.error('Error has occurred during token request', error);
@@ -67,31 +76,42 @@ const callback = (req, res, tokens) => {
     }
 }
 
-const searchSong = async (req, res, tokens) => {
+const searchSong = async (req, res) => {
     console.log('GET ' + req.path);
-    const elapsedTime = (Date.now() / 1000) - tokens.startTime;
+    let query = req.query.q;
+    let accessToken = req.user.accessToken;
+    let refreshToken = req.user.refreshToken;
+    let expiresIn = req.user.expiresIn;
+    let startTime = req.user.startTime;
+    let elapsedTime = (Date.now() / 1000) - Number.parseInt(startTime);
+
+    if (!expiresIn || !refreshToken || !accessToken || !startTime) {
+        console.log('Some Authorization Params were invalid');
+        res.status(404).json({
+            status: 404,
+            message: 'Some Authorization Params were invalid'
+        });
+    }
+
     //Ask for new access token if expired
-    if (tokens.expiresIn && elapsedTime > tokens.expiresIn) {
+    if (elapsedTime > Number.parseInt(expiresIn)) {
         const authOptions = {
             url: 'https://accounts.spotify.com/api/token',
             headers: { 'Authorization': 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64') },
             form: {
                 grant_type: 'refresh_token',
-                refresh_token: tokens.refreshToken
+                refresh_token: refreshToken
             },
             json: true
         };
         try {
-            tokens.accessToken = await service.requestRefreshToken(authOptions); 
+            accessToken = await service.requestRefreshToken(authOptions); 
         } catch (err) {
             console.error('Refresh Token Error', err);
             res.status(err.status ? err.status : 401).json(err);
         }
     }
 
-    let query = req.query.q;
-    let accessToken = tokens.accessToken;
-    let refreshToken = tokens.refreshToken;
     if (accessToken && refreshToken && query) {
         let queryParams = {
             url: 'https://api.spotify.com/v1/search',
