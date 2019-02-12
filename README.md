@@ -2,7 +2,7 @@
 
 An API wrapper used to request songs from Spotify API and lyrics from the Genius API. It will try to match the song titles acquired from Spotify against the song titles acquired from Genius using regex. 
 
-Through regex, it breaks down each song title + artist into a metadata object that contains information like version, translation, romanizatin, reprise, featured, etc.
+Through regex, it breaks down each song title + artist into a metadata object that contains information like version, translation, romanization, reprise, featured, etc.
 
 The API also uses JWT to send the access information in the form of a token inside of a cookie to the client. The client is required to use the token in its header to request data from the Spotify API.
 
