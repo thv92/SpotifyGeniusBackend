@@ -1,3 +1,6 @@
+const escape = require('escape-string-regexp');
+const normalize = require('string-normalize-es6');
+
 //For generating cookie value
 //Cookie value is then compared to state sent in response body after auth
 const generateRandomString = (length) => {
@@ -12,7 +15,7 @@ const generateRandomString = (length) => {
 //Remove any mix Terminology
 const removeMixTerm = (title) => {
     let upper = title.toUpperCase();
-    let pattern = /((?:-\s*.*)(?:remaster|remix|mix|medley|mash[-\s]?up|master)(?:d|ed|ing)?\s*(?:\d+)?.*)/ig;
+    let pattern = /((?:-\s\d*\s*)(?:remaster|master)(?:d|ed|ing)?\s*(?:\d*)?)/ig;
 
     let separated = upper.split(pattern).map((text) => text.trim());
     if (separated.length > 1) {
@@ -32,100 +35,192 @@ const removeMixTerm = (title) => {
     }
 };
 
+const isArtistVersion = (versionText, artists, featuredArtists) => {
+    let isArtist = false;
+    if (artists !== null) {
+        isArtist = compareArtists(versionText, artists);
+    }
+    if (featuredArtists !== null) {
+        isArtist |= compareArtists(versionText, featuredArtists);
+    }
+    return isArtist;
+};
+
+//Split for remix, feature, reprise, version
+const splitTitle = (title) => {
+    let splitTitle = title.split(/\s(?=[\(\[]|(?:\-.+(?:version|ver\.\-)))/ig);
+    let last = splitTitle.pop().split(/-\s(?!.+\)|\(.+)/g);
+    return splitTitle.concat(last);
+};
+
+//TODO: forward slash titles => separate them. add isTitleSplit ] boolean
 const getSongTitleMetadata = (title, artist) => {
     console.log('=========Creating Song Metadata for: ' + title + '=========');
-    const reprisePat = /(\s-\sreprise)/ig;
-    const featuredPat = /\(((?:(?:ft|feat)\.|with).*)\)/i;
-    const versionPat = /\(?(?:-)?((?<=[-(])\s?.*version)\)?/i;
+    title = normalize(title);
+    const reprisePat = /((?:\s-\s)?reprise)/ig;
+    const featurePat = /\((?:(?:ft|feat)\.|with)(.*)\)/i;
+    const featureOfPat = /of\s.+/i;
+    const versionPat = /[\-\(]?(.+)(?:version|ver\.)[\)\-]?/i;
+    const remixPat = /\((.*)\s?(?:remix(?:ed)?|mix)\)/i;
+    const translationPat = /[\(\[].*(?:(translations?|english)).*[\]\)]/i;
+    const romanizationPat = /[\(\[]((?:.*romanized?|romanizations?).*)[\]\)]/i;
     const original = title;
-    let version = null;
+    let translationInfo = null;
+    let versionInfo = null;
     let featured = null;
-    let isReprised = false;
-    let isFeatured = false;
+    let remixInfo = null;
+    let isReprise = false;
+    let isFeature = false;
     let isVersion = false;
+    let isRemix = false;
+    let isTranslation = false;
+    let isRomanization = false;
+    let titleSeparated = splitTitle(title);
+    let shortenedTitle = titleSeparated[0].trim().replace(/\u{02BC}|\u{2019}/ug, '\'');
+    const artistsSplit = artist.split(/,\s|&/ig).filter(text => text.length > 0).map(text => text.trim().toUpperCase());
+    console.log('Separated Title:');
+    console.log(titleSeparated);
+    //Match for every feature after splitting
+    if (titleSeparated.length > 1) {
+        titleSeparated.slice(1).forEach((item) =>{
 
-    if (title.match(reprisePat)) {
-        isReprised = true;
-        title = title.replace(reprisePat, '');
-    }
-    let matchedVersion = title.match(versionPat);
-    if (matchedVersion) {
-        isVersion = true;
-        version = matchedVersion[1];
-        title = title.replace(versionPat, '');
-    }
-    let matchedFeat = title.match(featuredPat);
-    if (matchedFeat) {
-      featured = matchedFeat[1].split(/ft\.|feat\.|,\s?|with/gi).filter(text => text.length > 0).map(text => text.trim());
-      isFeatured = true;
-      title = title.replace(featuredPat, '');
+            //Matching Featured Artists
+            let matchItem = item.match(featurePat);
+            if (matchItem) {
+                if (featured === null) {
+                    featured = [];
+                }
+                let matched = matchItem[1];
+                if (matched.match(featureOfPat)) {
+                    matched = matched.replace(featureOfPat, '');
+                }
+                matched = matched.split(/,\s|\s\&\s/ig).map(item => item.trim());
+                isFeature = true;
+                featured = featured.concat(matched);
+                return; //skip to next iteration
+            }
+
+            //Matching Versions
+            matchItem = item.match(versionPat);
+            console.log('Matching Version: ');
+            console.log(matchItem);
+            if (matchItem) {
+                let matched = matchItem[1];
+                isVersion = true;
+                versionInfo = matched.trim();
+                return;
+            }
+
+            //Matching reprise
+            matchItem = item.match(reprisePat);
+            if (matchItem) {
+                isReprise = true;
+                return;
+            }
+
+            //Matching remixes
+            matchItem = item.match(remixPat);
+            console.log(matchItem);
+            if (matchItem) {
+               let matched = matchItem[1];
+               isRemix = true;
+               remixInfo = matched.trim();
+               return;
+            }
+
+            //Matching translations
+            matchItem = item.match(translationPat);
+            if (matchItem) {
+                translationInfo = matchItem[1].trim();
+                isTranslation = true;
+                return;
+            }
+
+            //Matching Romanization
+            matchItem = item.match(romanizationPat);
+            if (matchItem) {
+                isRomanization = true;
+                return;
+            }
+        });
     }
 
-    //isReprise |
-    //isFeatured | boolean
-    //featuredArtist
-    //isVersion | boolean
-    //version: 
-    //length
-    //full song title
-    //primary artist
-    //title without featured (take out featured word and parenthesis), version, and reprise
     const result = {
-      isReprised,
-      isFeatured,
+      isReprise,
+      isFeature,
+      isRomanization,
       featuredArtists: featured,
       isVersion,
-      version,
+      isArtistVersion: versionInfo === null ? true : isArtistVersion(versionInfo, artistsSplit, featured),
+      versionInfo,
+      isTranslation,
+      translationInfo,
+      isRemix,
+      remixInfo,
       fullTitle: original,
-      title: title.split(/\s/).filter(text => text.length > 0).map(text => text.trim()).join(' '),
-      artist
+      title: shortenedTitle,
+      artists: artistsSplit
     };
+
     console.log(result);
     console.log('=========Creating Song Metadata Finished=========');
     return result;
 };
 
-const compareSongTitleMetadata = (left, right, ignoreFlags = {isReprised: false, isFeatured: false, isVersion: false, ignoreArtist: false}) => {
-    if (!ignoreFlags.isReprised && left.isReprised !== right.isReprised) {
-        return false;
-    }
-    if (!ignoreFlags.isFeatured && left.isFeatured !== right.isFeatured) {
-        return false;
-    } else if (!ignoreFlags.isFeatured && left.isFeatured && right.isFeatured) {
-        let notMatching = false;
-        left.featuredArtists.forEach((leftFeatured) => {
-            let anyMatching = right.featuredArtists.filter(rightFeatured => rightFeatured.toUpperCase() === leftFeatured.toUpperCase()).length > 0;
-
-            if (!anyMatching) {
-                notMatching = true;
-                return;
-            }
-        });
-        if(notMatching) {
-            return !notMatching;
-        }
-    }
-    if (!ignoreFlags.isVersion && left.isVersion !== right.isVersion) {
+const compareArtists = (left, right) => {
+    if (left === null && right === null || left === undefined && right === undefined) {
+        return true;
+    } else if (left === null || right === null) {
         return false;
     }
 
-    if (!ignoreFlags.ignoreArtist) {
-        let shorterArtist = left.artist.length > right.artist.length ? right.artist : left.artist;
-        let longerArtist = left.artist.length > right.artist.length ? left.artist : right.artist;
-        let regex = new RegExp(shorterArtist, 'ig');
-        if (!longerArtist.match(regex)) {
-            return false;
-        }
+    if (typeof left === 'string') {
+        left = [left];
+    }
+    if (typeof right === 'string') {
+        right = [right];
     }
 
-    let shorterTitle = left.title.length > right.title.length ? right.title : left.title;
-    let longerTitle = left.title.length > right.title.length ? left.title : right.title;
-    let titleRegex = new RegExp(shorterTitle, 'ig');
-    if (!longerTitle.match(titleRegex)) {
-        return false;
-    }
-    return true;
+    //remove spaces and capitalize each item
+    let nsLeft = left.map(item => item.replace(/\s/g, '').toUpperCase());
+    let nsRight = right.map(item => item.replace(/\s/g, '').toUpperCase());
+    return nsLeft.filter((leftItem) => {
+        return nsRight.filter(rightItem => rightItem === leftItem).length > 0;
+    }).length > 0;
 };
+
+const compareTextWithIncludes = (left, right) => {
+    if (left === null && right === null) {
+        return true;
+    } else if (left === null || right === null) {
+        return false;
+    }
+    let shorter = left.length > right.length ? right : left;
+    let longer = left.length > right.length ? left : right;
+    let regex = new RegExp(escape(shorter), 'ig');
+    console.log(`shorter ${shorter} | longer: ${longer}`);
+    if (longer.match(regex)) {
+        return true;
+    }
+    return false;
+};
+
+const processHitForOtherVersion = (hitMD, url) => {
+    if (hitMD.isTranslation) {
+       return {
+            type: 't',
+            typeInfo: hitMD.translationInfo,
+            url
+        };
+    } else {
+        return{
+            type: 'r',
+            typeInfo: 'Romanization',
+            url
+        };
+    }
+};
+
 
 //Google:
 //kc:/music/recording_cluster:lyrics
@@ -136,5 +231,7 @@ module.exports = {
     generateRandomString,
     removeMixTerm,
     getSongTitleMetadata,
-    compareSongTitleMetadata
+    compareTextWithIncludes,
+    compareArtists,
+    processHitForOtherVersion
 };
