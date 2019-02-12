@@ -7,8 +7,7 @@ const clientID = process.env.SPOTIFY_CLIENT_ID || null;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || null;
 const stateKey = 'spotify_auth_state';
 const service = require('../services/spotifyService');
-const authCookieKey = 'verify_state';
-
+const jwtCookie = process.env.STATE || 'verify_state';
 //User is asked to authorize access with predefined scopes
 //User then redirected to 'redirectURI'
 const login = (req, res) => {
@@ -67,7 +66,7 @@ const callback = (req, res) => {
             };
 
             let jwtToken = jwt.sign(payload, process.env.JWT_SECRET);
-            res.cookie(authCookieKey, jwtToken);
+            res.cookie(jwtCookie, jwtToken);
             res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
         }, (error) => {
             console.error('Error has occurred during token request', error);
