@@ -13,9 +13,9 @@ const app = express();
 const port = process.env.PORT || 9090;
 
 app.use(cors())
-.use(jwtMiddleware({
-    secret: process.env.JWT_SECRET
-}).unless({path: ['/login', '/callback', '/search/lyric']}))
+// .use(jwtMiddleware({
+    // secret: process.env.JWT_SECRET
+// }).unless({path: ['/login', '/callback', '/search/lyric']}))
 .use(cookieparser());
 //configure routes
 const routes = require('./routes/routes');
