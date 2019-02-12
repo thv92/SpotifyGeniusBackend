@@ -16,16 +16,17 @@ const login = (req, res) => {
     let state = util.generateRandomString(16);
     let scope = 'user-read-currently-playing';
     res.cookie(stateKey, state);
-    console.log('Asking user for authentication...');
-    //request auth from spotify's account service
-    res.redirect('https://accounts.spotify.com/authorize?' + 
-        querystring.stringify({
-            response_type: 'code',
-            client_id: clientID,
-            redirect_uri: redirectURI,
-            state: state,
-            scope: scope
-        }));
+    res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
+    // console.log('Asking user for authentication...');
+    // //request auth from spotify's account service
+    // res.redirect('https://accounts.spotify.com/authorize?' + 
+    //     querystring.stringify({
+    //         response_type: 'code',
+    //         client_id: clientID,
+    //         redirect_uri: redirectURI,
+    //         state: state,
+    //         scope: scope
+    //     }));
 };
 
 //User redirected after auth request has been accepted/rejected
