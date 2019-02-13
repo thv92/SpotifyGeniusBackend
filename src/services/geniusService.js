@@ -60,7 +60,7 @@ const doLyrics = async (name, artist) => {
             if (util.compareTextWithIncludes(queryMD.title, hitMD.fullTitle) && queryMD.isReprise === hitMD.isReprise) {
                 console.log('Title and Reprise matched!');
 
-                if ((hitMD.versionInfo === queryMD.versionInfo) && (hitMD.isTranslation || hitMD.isRomanization) && (util.compareTextWithIncludes(queryMD.artists[0], hitMD.title) || util.compareTextWithIncludes(queryMD.title, hitMD.title))) {
+                if ((hitMD.versionInfo === queryMD.versionInfo || hitMD.isASSLV) && (hitMD.isTranslation || hitMD.isRomanization) && (util.compareTextWithIncludes(queryMD.artists[0], hitMD.title) || util.compareTextWithIncludes(queryMD.title, hitMD.title))) {
                     otherVersions.push(util.processHitForOtherVersion(hitMD, hit.result.url));
                     return;
                 }

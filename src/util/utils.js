@@ -66,6 +66,7 @@ const getSongTitleMetadata = (title, artist) => {
     const romanizationPat = /[\(\[]((?:.*romanized?|romanizations?).*)[\]\)]/i;
     const original = title;
     let translationInfo = null;
+    let isASSLV = false; //Acoustic Stage Studio Live Version
     let versionInfo = null;
     let featured = null;
     let remixInfo = null;
@@ -105,9 +106,18 @@ const getSongTitleMetadata = (title, artist) => {
             console.log('Matching Version: ');
             console.log(matchItem);
             if (matchItem) {
-                let matched = matchItem[1];
+                let matched = matchItem[1].trim();
                 isVersion = true;
-                versionInfo = matched.trim();
+
+                if (versionInfo === null) {
+                    versionInfo = [];
+                }
+
+                if (matched.match(/acoustic|live|stage|studio/ig)) {
+                    isASSLV = true;
+                }
+
+                versionInfo.push(matched);
                 return;
             }
 
@@ -151,6 +161,7 @@ const getSongTitleMetadata = (title, artist) => {
       isRomanization,
       featuredArtists: featured,
       isVersion,
+      isASSLV,
       isArtistVersion: versionInfo === null ? true : isArtistVersion(versionInfo, artistsSplit, featured),
       versionInfo,
       isTranslation,
