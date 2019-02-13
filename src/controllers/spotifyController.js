@@ -65,7 +65,7 @@ const callback = (req, res) => {
                 startTime: result.startTime
             };
             let jwtToken = jwt.sign(payload, process.env.JWT_SECRET);
-            res.redirect(process.env.REDIRECT_AFTER_CALLBACK + querystring.stringify({t: jwtToken}));
+            res.redirect(process.env.REDIRECT_AFTER_CALLBACK + '?' + querystring.stringify({t: jwtToken}));
         }, (error) => {
             console.error('Error has occurred during token request', error);
             res.status(401).json(error);
