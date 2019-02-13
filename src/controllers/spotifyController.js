@@ -15,7 +15,7 @@ const login = (req, res) => {
     console.log('clientID: ' + clientID);
     let state = util.generateRandomString(16);
     let scope = 'user-read-currently-playing';
-    res.cookie(stateKey, state, {domain: 'spotify-genius.herokuapp.com', expires: new Date(Date.now() + 900000)});
+    res.cookie(stateKey, state, {domain: '.spotify-genius.herokuapp.com', expires: new Date(Date.now() + 900000)});
     res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
     // console.log('Asking user for authentication...');
     // //request auth from spotify's account service
