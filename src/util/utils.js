@@ -1,6 +1,5 @@
 const escape = require('escape-string-regexp');
 const normalize = require('string-normalize-es6');
-
 //For generating cookie value
 //Cookie value is then compared to state sent in response body after auth
 const generateRandomString = (length) => {
@@ -35,13 +34,13 @@ const removeMixTerm = (title) => {
     }
 };
 
-const isArtistVersion = (versionText, artists, featuredArtists) => {
+const isArtistVersion = (versionInfo, artists, featuredArtists) => {
     let isArtist = false;
     if (artists !== null) {
-        isArtist = compareArtists(versionText, artists);
+        isArtist = compareArtists(versionInfo, artists);
     }
     if (featuredArtists !== null) {
-        isArtist |= compareArtists(versionText, featuredArtists);
+        isArtist |= compareArtists(versionInfo, featuredArtists);
     }
     return isArtist;
 };
@@ -107,15 +106,17 @@ const getSongTitleMetadata = (title, artist) => {
             console.log(matchItem);
             if (matchItem) {
                 let matched = matchItem[1].trim();
-                isVersion = true;
+                //Separate these versions from other versioned songs
+                if (matched.match(/acoustic|live|stage|studio/ig)) {
+                    isASSLV = true;
+                    return;
+                }
 
+                isVersion = true;
                 if (versionInfo === null) {
                     versionInfo = [];
                 }
 
-                if (matched.match(/acoustic|live|stage|studio/ig)) {
-                    isASSLV = true;
-                }
 
                 versionInfo.push(matched);
                 return;
@@ -232,6 +233,20 @@ const processHitForOtherVersion = (hitMD, url) => {
     }
 };
 
+const compareArrays = (left, right) => {
+    if (left === null && right === null) {
+        return true;
+    } else if (left === null || right === null) {
+        return false;
+    } else if (left.length !== right.length) {
+        return false;
+    } else {
+        left.sort();
+        right.sort();
+        return left.every((value, index) => value === right[index]);
+    }
+}
+
 
 //Google:
 //kc:/music/recording_cluster:lyrics
@@ -244,5 +259,6 @@ module.exports = {
     getSongTitleMetadata,
     compareTextWithIncludes,
     compareArtists,
-    processHitForOtherVersion
+    processHitForOtherVersion,
+    compareArrays
 };

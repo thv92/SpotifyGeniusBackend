@@ -60,7 +60,9 @@ const doLyrics = async (name, artist) => {
             if (util.compareTextWithIncludes(queryMD.title, hitMD.fullTitle) && queryMD.isReprise === hitMD.isReprise) {
                 console.log('Title and Reprise matched!');
 
-                if ((hitMD.versionInfo === queryMD.versionInfo || hitMD.isASSLV) && (hitMD.isTranslation || hitMD.isRomanization) && (util.compareTextWithIncludes(queryMD.artists[0], hitMD.title) || util.compareTextWithIncludes(queryMD.title, hitMD.title))) {
+                let compareVersionInfo = compareArrays(hitMD.versionInfo, queryMD.versionInfo);
+
+                if ( compareVersionInfo && (hitMD.isTranslation || hitMD.isRomanization) && (util.compareTextWithIncludes(queryMD.artists[0], hitMD.title) || util.compareTextWithIncludes(queryMD.title, hitMD.title))) {
                     otherVersions.push(util.processHitForOtherVersion(hitMD, hit.result.url));
                     return;
                 }
@@ -71,7 +73,7 @@ const doLyrics = async (name, artist) => {
                 let concatHitArtists = hitMD.featuredArtists === null ? hitMD.artists : hitMD.artists.concat(hitMD.featuredArtists);
                 
                 if (util.compareArtists(concatQueryArtists, concatHitArtists) && queryMD.isArtistVersion === hitMD.isArtistVersion) {
-                    if (queryMD.isRemix === hitMD.isRemix && queryMD.remixInfo === hitMD.remixInfo && queryMD.versionInfo === hitMD.versionInfo) {
+                    if (queryMD.isRemix === hitMD.isRemix && queryMD.remixInfo === hitMD.remixInfo && compareVersionInfo) {
                         mainVersion.push(hit);
                     } else {
                         possibleMainVersions.push(hit);
