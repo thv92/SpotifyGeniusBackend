@@ -15,18 +15,17 @@ const login = (req, res) => {
     console.log('clientID: ' + clientID);
     let state = util.generateRandomString(16);
     let scope = 'user-read-currently-playing';
-    res.cookie(stateKey, state, {domain: '.spotify-genius.herokuapp.com', expires: new Date(Date.now() + 900000)});
-    res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
-    // console.log('Asking user for authentication...');
-    // //request auth from spotify's account service
-    // res.redirect('https://accounts.spotify.com/authorize?' + 
-    //     querystring.stringify({
-    //         response_type: 'code',
-    //         client_id: clientID,
-    //         redirect_uri: redirectURI,
-    //         state: state,
-    //         scope: scope
-    //     }));
+    res.cookie(stateKey, state);
+    console.log('Asking user for authentication...');
+    //request auth from spotify's account service
+    res.redirect('https://accounts.spotify.com/authorize?' + 
+        querystring.stringify({
+            response_type: 'code',
+            client_id: clientID,
+            redirect_uri: redirectURI,
+            state: state,
+            scope: scope
+        }));
 };
 
 //User redirected after auth request has been accepted/rejected
@@ -65,10 +64,8 @@ const callback = (req, res) => {
                 expiresIn: result.expiresIn,
                 startTime: result.startTime
             };
-
             let jwtToken = jwt.sign(payload, process.env.JWT_SECRET);
-            res.cookie(jwtCookie, jwtToken);
-            res.redirect(process.env.REDIRECT_AFTER_CALLBACK);
+            res.redirect(process.env.REDIRECT_AFTER_CALLBACK + querystring.stringify({t: jwtToken}));
         }, (error) => {
             console.error('Error has occurred during token request', error);
             res.status(401).json(error);
