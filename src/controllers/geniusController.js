@@ -22,6 +22,9 @@ const searchLyric = async (req, res) => {
                     lyric
                 };
             }));
+            lyrics = lyrics.filter((lyricObj) => {
+                return lyricObj.lyric !== null && lyricObj.lyric.length > 0;
+            });
             res.json({ lyrics });
         } catch(err) {
             console.error('Error occurred while requesting lyrics', JSON.stringify(err));

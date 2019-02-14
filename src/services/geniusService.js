@@ -60,8 +60,7 @@ const doLyrics = async (name, artist) => {
             if (util.compareTextWithIncludes(queryMD.title, hitMD.fullTitle) && queryMD.isReprise === hitMD.isReprise) {
                 console.log('Title and Reprise matched!');
 
-                let compareVersionInfo = compareArrays(hitMD.versionInfo, queryMD.versionInfo);
-
+                let compareVersionInfo = util.compareArrays(hitMD.versionInfo, queryMD.versionInfo);
                 if ( compareVersionInfo && (hitMD.isTranslation || hitMD.isRomanization) && (util.compareTextWithIncludes(queryMD.artists[0], hitMD.title) || util.compareTextWithIncludes(queryMD.title, hitMD.title))) {
                     otherVersions.push(util.processHitForOtherVersion(hitMD, hit.result.url));
                     return;
